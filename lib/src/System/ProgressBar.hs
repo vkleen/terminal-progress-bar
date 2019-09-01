@@ -253,12 +253,12 @@ renderProgressBar style progress timing = TL.concat
     , styleEscapeDone style progress
     , TL.replicate completed $ TL.singleton $ styleDone style
     , styleEscapeCurrent style progress
-    , if remaining /= 0 && completed /= 0
-      then TL.singleton $ styleCurrent style
+    , if remaining /= 0 && done /= 0
+      then TL.singleton $ styleCurrent style completedFrac
       else ""
     , styleEscapeTodo style progress
     , TL.replicate
-        (remaining - if completed /= 0 then 1 else 0)
+        (remaining - if done /= 0 then 1 else 0)
         (TL.singleton $ styleTodo style)
     , styleEscapeClose style progress
     , styleClose style
@@ -293,8 +293,11 @@ renderProgressBar style progress timing = TL.concat
     numCompletedChars :: Ratio Int64
     numCompletedChars = fraction * (effectiveWidth % 1)
 
+    completedWhole :: Int64
+    (completedWhole, completedFrac) = properFraction numCompletedChars
+
     completed, remaining :: Int64
-    completed = min effectiveWidth $ floor numCompletedChars
+    completed = min effectiveWidth completedWhole
     remaining = effectiveWidth - completed
 
     prefixLabel, postfixLabel :: TL.Text
@@ -371,7 +374,7 @@ data Style s
        -- ^ Bar closing symbol
      , styleDone :: !Char
        -- ^ Completed work.
-     , styleCurrent :: !Char
+     , styleCurrent :: Ratio Int64 -> Char
        -- ^ Symbol used to denote the current amount of work that has been done.
      , styleTodo :: !Char
        -- ^ Work not yet completed.
@@ -433,7 +436,7 @@ defStyle =
     { styleOpen          = "["
     , styleClose         = "]"
     , styleDone          = '='
-    , styleCurrent       = '>'
+    , styleCurrent       = const '>'
     , styleTodo          = '.'
     , stylePrefix        = mempty
     , stylePostfix       = percentage
