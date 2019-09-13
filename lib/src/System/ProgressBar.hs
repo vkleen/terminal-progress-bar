@@ -227,6 +227,7 @@ hPutProgressBar hndl style progress timing = do
              -- Move to beginning of line and then clear everything to
              -- the right of the cursor.
              Clear -> "\r\ESC[K"
+             Write x -> "\r\ESC[K" <> x <> "\n"
       else "\r"
     hFlush hndl
 
@@ -419,6 +420,7 @@ data OnComplete
      -- ^ Write a new line when the progress bar is finished. The
      -- completed progress bar will remain visible.
    | Clear -- ^ Clear the progress bar once it is finished.
+   | Write TL.Text
      deriving (Generic)
 
 instance NFData OnComplete
